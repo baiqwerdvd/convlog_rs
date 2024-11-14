@@ -6,7 +6,7 @@ __all__ = (
     "TenhouToMjaiError",
     "JsonSerializationError",
     "JsonParsingError",
-    "tenhou_to_mjai",
+    "tenhou_file_to_mjai",
 )
 
 # VERSION is set in Cargo.toml
@@ -17,4 +17,5 @@ TenhouToMjaiError = _convlog.TenhouToMjaiError
 JsonSerializationError = _convlog.JsonSerializationError
 JsonParsingError = _convlog.JsonParsingError
 
+tenhou_file_to_mjai = _convlog.tenhou_file_to_mjai
 tenhou_to_mjai = _convlog.tenhou_to_mjai

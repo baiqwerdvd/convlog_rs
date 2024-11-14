@@ -19,8 +19,26 @@ create_exception!(_convlog, JsonSerializationError, PyValueError);
 create_exception!(_convlog, JsonParsingError, PyValueError);
 
 #[pyfunction]
+fn tenhou_to_mjai(data: String) -> PyResult<Vec<String>> {
+    let raw_log: RawLog = json::from_str(&data)
+        .map_err(|_| JsonParsingError::new_err("failed to parse tenhou.net/6 log"))?;
+    let log = Log::try_from(raw_log).map_err(|_| TenhouLogParsingError::new_err("invalid log"))?;
+    let events = convlog::tenhou_to_mjai(&log)
+        .map_err(|_| TenhouToMjaiError::new_err("failed to convert tenhou.net/6 log to mjai"))?;
+
+    let mut ret = Vec::new();
+    for event in &events {
+        let to_push = json::to_string(event)
+            .map_err(|_| JsonSerializationError::new_err("failed to serialize"))?;
+        ret.push(to_push);
+    }
+
+    Ok(ret)
+}
+
+#[pyfunction]
 #[pyo3(signature = (filename, mjai_out=None))]
-fn tenhou_to_mjai(filename: PathBuf, mjai_out: Option<PathBuf>) -> PyResult<Vec<String>> {
+fn tenhou_file_to_mjai(filename: PathBuf, mjai_out: Option<PathBuf>) -> PyResult<Vec<String>> {
     let mut file = File::open(&filename).map_err(|_| {
         PyFileNotFoundError::new_err(format!("failed to open tenhou.net/6 log file {filename:?}"))
     })?;
@@ -88,6 +106,7 @@ fn _convlog(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
         py.get_type_bound::<JsonSerializationError>(),
     )?;
     m.add("JsonParsingError", py.get_type_bound::<JsonParsingError>())?;
+    m.add_function(wrap_pyfunction!(tenhou_file_to_mjai, m)?)?;
     m.add_function(wrap_pyfunction!(tenhou_to_mjai, m)?)?;
     let version = get_version();
     m.add("__version__", version.clone())?;
